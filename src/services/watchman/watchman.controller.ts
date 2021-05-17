@@ -7,6 +7,7 @@ export class WatchmanController extends EventEmitter {
     super();
     this.on(NEW_INTERACTION, (data: any) => {
       // TODO: call watchman service
+      console.log(data);
     });
   }
 }

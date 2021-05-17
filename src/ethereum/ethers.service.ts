@@ -54,12 +54,18 @@ export class EthersService {
 
   async subscribeToEvent(eventName: string) {
     if (eventName === 'HeadUpdated') {
+      let filter = this.contract.filters.HeadUpdated();
+      filter.fromBlock = this.provider
+        .getBlockNumber()
+        .then((b: any) => b - 10000);
+      filter.toBlock = 'latest';
       // If HeadUpdated is the event chosen, then we instantiate the event.
       const headUpdated = new HeadUpdatedEvent(
         this.contract,
         eventName,
         this.provider,
-        this.ipfs
+        this.ipfs,
+        filter
       );
 
       await headUpdated.watch();

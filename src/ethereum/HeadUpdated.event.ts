@@ -14,7 +14,8 @@ export class HeadUpdatedEvent {
     private contract: any,
     private eventName: string,
     private provider: ethers.providers.JsonRpcProvider,
-    private ipfs: IpfsStore
+    private ipfs: IpfsStore,
+    private filter: any
   ) {
     this.blockNotification = new WatchmanController(WatchmanService);
   }
@@ -22,15 +23,19 @@ export class HeadUpdatedEvent {
   public async watch() {
     this.contract.on(
       this.eventName,
+
       async (author: any, val0: any, val1: any, event: any) => {
         /**
          * We retrieve the new incoming data from the event
          * and the inmediate previous data too on this event.
          */
+
+        // Filter logs by user.
+        this.filter.from = author;
+
         const data = await this.getCurrentAndPreviousData(
           val0,
           val1,
-          author,
           this.provider,
           this.ipfs
         );
@@ -47,7 +52,6 @@ export class HeadUpdatedEvent {
   async getCurrentAndPreviousData(
     val0: string,
     val1: string,
-    wallet: string,
     provider: ethers.providers.JsonRpcProvider,
     ipfs: IpfsStore // Used to retrieve entities from a hash.
   ) {
@@ -57,13 +61,7 @@ export class HeadUpdatedEvent {
     const eventData = await ipfs.get(newHash);
 
     try {
-      const logs = await provider.getLogs({
-        fromBlock: 0,
-        toBlock: 'latest',
-        address: process.env.CONTRACT_ADDRESS,
-        topics: [process.env.TOPIC || ''], //HeadUpdated(address,bytes32,bytes32)
-      });
-
+      const logs = await provider.getLogs(this.filter);
       const previousEvent = logs[logs.length - 2];
 
       // this will return an array with an object for each event
