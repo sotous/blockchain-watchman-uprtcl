@@ -6,9 +6,21 @@ import { WatchmanService } from '../services/watchman/watchman.service';
 import { bytes32ToCid } from '@uprtcl/evees';
 
 export const NEW_INTERACTION = 'new_interaction';
+export interface HeadUpdateData {
+  id: string;
+  object: [
+    {
+      perspectiveId: string;
+      canUpdate: boolean;
+      guardianId?: string;
+      headId: string;
+    }
+  ];
+}
 
 export class HeadUpdatedEvent {
   blockNotification: any;
+  watchmanService: WatchmanService;
 
   constructor(
     private contract: any,
@@ -17,13 +29,13 @@ export class HeadUpdatedEvent {
     private ipfs: IpfsStore,
     private filter: any
   ) {
-    this.blockNotification = new WatchmanController(WatchmanService);
+    this.watchmanService = new WatchmanService();
+    this.blockNotification = new WatchmanController(this.watchmanService);
   }
 
   public async watch() {
     this.contract.on(
       this.eventName,
-
       async (author: any, val0: any, val1: any, event: any) => {
         /**
          * We retrieve the new incoming data from the event
