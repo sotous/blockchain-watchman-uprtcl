@@ -3,33 +3,41 @@ import { IpfsStore } from '@uprtcl/ipfs-provider';
 import { abi } from '../utils/UprtclRoot.min.json';
 import { WatchmanController } from '../services/watchman/watchman.controller';
 import { WatchmanService } from '../services/watchman/watchman.service';
-import { bytes32ToCid } from '@uprtcl/evees';
+import { WatchmanRepository } from '../services/watchman/watchman.repository';
+import { bytes32ToCid, LinkChanges } from '@uprtcl/evees';
 
 export const NEW_INTERACTION = 'new_interaction';
 export interface HeadUpdateData {
   id: string;
-  object: [
-    {
-      perspectiveId: string;
-      canUpdate: boolean;
-      guardianId?: string;
-      headId: string;
-    }
-  ];
+  object: UpdateContent[];
+}
+
+export interface UpdateContent {
+  perspectiveId: string;
+  canUpdate: boolean;
+  guardianId?: string;
+  headId: string;
+  linkChanges?: LinkChanges;
+  text?: string;
+}
+
+export interface HeadMutation {
+  changes?: UpdateContent[];
+  added?: UpdateContent[];
+  removed?: UpdateContent[];
 }
 
 export class HeadUpdatedEvent {
   blockNotification: any;
-  watchmanService: WatchmanService;
 
   constructor(
     private contract: any,
     private eventName: string,
     private provider: ethers.providers.JsonRpcProvider,
     private ipfs: IpfsStore,
-    private filter: any
+    private filter: any,
+    private watchmanService: WatchmanService
   ) {
-    this.watchmanService = new WatchmanService();
     this.blockNotification = new WatchmanController(this.watchmanService);
   }
 
@@ -51,7 +59,6 @@ export class HeadUpdatedEvent {
           this.provider,
           this.ipfs
         );
-
         // If the hash is different, changes might be present.
         if (data.previous && data.event.id !== data.previous.id) {
           this.blockNotification.emit(NEW_INTERACTION, data);

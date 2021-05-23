@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import { abi } from '../utils/UprtclRoot.min.json';
 import { IpfsStore } from '@uprtcl/ipfs-provider';
 import { HeadUpdatedEvent } from './HeadUpdated.event';
+import { WatchmanService } from '../services/watchman/watchman.service';
 
 require('dotenv').config();
 
@@ -12,10 +13,13 @@ export class EthersService {
   contract: any;
   provider: any;
   event: any;
-  ipfs: any;
   blockNotification: any;
 
-  constructor() {
+  constructor(
+    private watchmanService: WatchmanService,
+    private ipfs: IpfsStore
+  ) {
+    console.log('HEY');
     this.connectionReady = new Promise<void>(async (resolve) => {
       await this.connect();
       resolve();
@@ -43,10 +47,6 @@ export class EthersService {
       this.provider
     );
 
-    // Connect to IPFS in order to have available a method to retrieve entities from a hash.
-    this.ipfs = new IpfsStore();
-    await this.ipfs.connect();
-
     this.contract = contract;
     // We subscribe to the main event.
     await this.subscribeToEvent(process.env.MAIN_EVENT || '');
@@ -65,14 +65,11 @@ export class EthersService {
         eventName,
         this.provider,
         this.ipfs,
-        filter
+        filter,
+        this.watchmanService
       );
 
       await headUpdated.watch();
     }
-  }
-
-  ready(): Promise<void> {
-    return this.connectionReady;
   }
 }
