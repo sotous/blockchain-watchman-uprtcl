@@ -7,7 +7,6 @@ export class WatchmanController extends EventEmitter {
     super();
     this.on(NEW_INTERACTION, async (data: any) => {
       console.log('[Blockchain Microservice] - Interaction detected.');
-      console.log('Posting updates . . .');
       await this.watchmanService.postNewUpdate(data);
     });
   }

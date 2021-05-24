@@ -23,16 +23,16 @@ export class WatchmanService {
 
     // Look for any previous event to current.
     if (!previous) {
-      const eveesMutation = this.buildEveesMutation(event);
-      console.log(eveesMutation);
-      // Send to server.
+      // find the difference between the two given events.
+      updates = this.getLogsDifference(previous, event);
+    } else {
+      updates = event;
     }
 
-    // find the difference between the two given events.
-    updates = this.getLogsDifference(previous, event);
     const eveesMutation = await this.buildEveesMutation(updates);
-    console.log(eveesMutation);
-    return;
+    if (eveesMutation) {
+      await this.watchmanRepo.postNewUpdate(eveesMutation);
+    }
   }
 
   async buildEveesMutation(
