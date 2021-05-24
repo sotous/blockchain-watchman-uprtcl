@@ -8,6 +8,6 @@ const ipfs = new IpfsStore();
 const watchmanRepo = new WatchmanRepository();
 const watchmanService = new WatchmanService(ipfs, watchmanRepo);
 
-const ethService = new EthersService();
+const ethService = new EthersService(watchmanService, ipfs);
 
 export const routes = [];
