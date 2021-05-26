@@ -1,13 +1,16 @@
 import { EthersService } from '../ethereum/ethers.service';
 import { WatchmanRepository } from './watchman/watchman.repository';
 import { WatchmanService } from './watchman/watchman.service';
-import { IpfsStore } from '@uprtcl/ipfs-provider';
+import IPFS from 'ipfs';
 
-// Connect to IPFS in order to have available a method to retrieve entities from a hash.
-const ipfs = new IpfsStore();
-const watchmanRepo = new WatchmanRepository();
-const watchmanService = new WatchmanService(ipfs, watchmanRepo);
+export const getRoutes = async () => {
+  // Create IPFS node to be able to retrieve hashes.
+  const ipfs = await IPFS.create();
 
-const ethService = new EthersService(watchmanService, ipfs);
+  const watchmanRepo = new WatchmanRepository();
+  const watchmanService = new WatchmanService(ipfs, watchmanRepo);
 
-export const routes = [];
+  const ethService = new EthersService(watchmanService, ipfs);
+
+  return [];
+};
