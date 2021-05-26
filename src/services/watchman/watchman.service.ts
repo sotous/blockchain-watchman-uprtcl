@@ -1,5 +1,4 @@
-import { HeadUpdateData, HeadMutation } from '../../ethereum/HeadUpdated.event';
-import { IpfsStore } from '@uprtcl/ipfs-provider';
+import { UpdateContent, HeadMutation } from '../../ethereum/HeadUpdated.event';
 import {
   EveesMutationCreate,
   EntityCreate,
@@ -7,162 +6,180 @@ import {
   Update,
 } from '@uprtcl/evees';
 import { WatchmanRepository } from './watchman.repository';
+import { getContentFromHash } from '../../ethereum/HeadUpdated.event';
 
 export class WatchmanService {
-  constructor(
-    private ipfs: IpfsStore,
-    private watchmanRepo: WatchmanRepository
-  ) {}
+  constructor(private ipfs: any, private watchmanRepo: WatchmanRepository) {}
   async postNewUpdate(blockchainData: any): Promise<void> {
-    if (!this.isHeadUpdatedEvent(blockchainData)) {
-      throw new Error('Not a head updated event');
-    }
-    const previous = this.translateBlockToEventData(blockchainData.previous);
+    const previous = blockchainData.previous
+      ? this.translateBlockToEventData(blockchainData.previous)
+      : undefined;
     const event = this.translateBlockToEventData(blockchainData.event);
-    let updates;
+    let update;
 
     // Look for any previous event to current.
     if (!previous) {
-      // find the difference between the two given events.
-      updates = this.getLogsDifference(previous, event);
+      const headMutation: HeadMutation = {
+        added: event,
+      };
+      update = headMutation;
     } else {
-      updates = event;
+      // find the difference between the two given events.
+      update = this.getLogsDifference(previous, event);
     }
 
-    const eveesMutation = await this.buildEveesMutation(updates);
+    const eveesMutation = await this.buildEveesMutation(update);
     if (eveesMutation) {
       await this.watchmanRepo.postNewUpdate(eveesMutation);
     }
   }
 
   async buildEveesMutation(
-    data: HeadUpdateData | HeadMutation
+    data: HeadMutation
   ): Promise<EveesMutationCreate | undefined> {
-    const create = (data as HeadUpdateData).object;
-    const mutation = (data as HeadMutation).changes;
     let mutationEntities: EntityCreate[] = [];
 
     let updates: Update[] = [];
     let newPerspectives: NewPerspective[] = [];
 
-    if (create) {
-      // Since this is create, return newPerspectives
-      newPerspectives = await Promise.all(
-        create.map(async (persp) => {
-          const perspective = await this.ipfs.get(persp.perspectiveId);
-          const head = await this.ipfs.get(persp.headId);
-          const data = await this.ipfs.get(head.object.payload.dataId);
+    const added = data.added;
+    const changes = data.changes;
 
-          mutationEntities.push(perspective, head, data);
-
-          return {
-            perspective: perspective,
-            update: {
-              perspectiveId: perspective.id,
-              details: {
-                headId: head.id,
-                guardianId: persp.guardianId,
-                canUpdate: persp.canUpdate,
-              },
-              indexData: {
-                linkChanges: persp.linkChanges,
-                text: persp.text,
-              },
-            },
-          };
-        })
-      );
-
-      return {
-        newPerspectives,
-        updates,
-        entities: mutationEntities,
-      };
-    }
-
-    if (mutation) {
-      const added = (data as HeadMutation).added;
-
+    if (changes) {
       // For change elements return updates.
-      updates = await Promise.all(
-        mutation.map(async (persp) => {
-          const perspective = await this.ipfs.get(persp.perspectiveId);
-          const head = await this.ipfs.get(persp.headId);
-          const data = await this.ipfs.get(head.object.payload.dataId);
+      const perspective = await getContentFromHash(
+        changes[0].perspectiveId,
+        this.ipfs
+      );
+      const head = await getContentFromHash(changes[0].headId, this.ipfs);
+      const data = await getContentFromHash(head.payload.dataId, this.ipfs);
 
-          mutationEntities.push(perspective, head, data);
+      mutationEntities.push(perspective, head, data);
 
-          return {
+      updates = [
+        {
+          perspectiveId: perspective.id,
+          details: {
+            headId: head.id,
+            guardianId: changes[0].guardianId,
+            canUpdate: changes[0].canUpdate,
+          },
+          indexData: {
+            linkChanges: changes[0].linkChanges,
+            text: changes[0].text,
+          },
+        },
+      ];
+    }
+    // updates = await Promise.all(
+    //   changes.map(async (persp) => {
+    //     const perspective = await getContentFromHash(
+    //       persp.perspectiveId,
+    //       this.ipfs
+    //     );
+    //     const head = await getContentFromHash(persp.headId, this.ipfs);
+    //     const data = await getContentFromHash(head.payload.dataId, this.ipfs);
+
+    //     mutationEntities.push(perspective, head, data);
+
+    //     return {
+    //       perspectiveId: perspective.id,
+    //       details: {
+    //         headId: head.id,
+    //         guardianId: persp.guardianId,
+    //         canUpdate: persp.canUpdate,
+    //       },
+    //       indexData: {
+    //         linkChanges: persp.linkChanges,
+    //         text: persp.text,
+    //       },
+    //     };
+    //   })
+    // );
+    //}
+
+    if (added) {
+      // For change elements return updates.
+      const perspective = await getContentFromHash(
+        added[0].perspectiveId,
+        this.ipfs
+      );
+      const head = await getContentFromHash(added[0].headId, this.ipfs);
+      const data = await getContentFromHash(head.payload.dataId, this.ipfs);
+
+      mutationEntities.push(perspective, head, data);
+
+      newPerspectives = [
+        {
+          perspective: perspective,
+          update: {
             perspectiveId: perspective.id,
             details: {
               headId: head.id,
-              guardianId: persp.guardianId,
-              canUpdate: persp.canUpdate,
+              guardianId: added[0].guardianId,
+              canUpdate: added[0].canUpdate,
             },
             indexData: {
-              linkChanges: persp.linkChanges,
-              text: persp.text,
+              linkChanges: added[0].linkChanges,
+              text: added[0].text,
             },
-          };
-        })
-      );
+          },
+        },
+      ];
+      // newPerspectives = await Promise.all(
+      //   added.map(async (persp) => {
+      //     const perspective = await getContentFromHash(
+      //       persp.perspectiveId,
+      //       this.ipfs
+      //     );
+      //     const head = await getContentFromHash(persp.headId, this.ipfs);
+      //     const data = await getContentFromHash(head.payload.dataId, this.ipfs);
 
-      // If add return update and newPerspectives
-      // For change elements return updates.
+      //     mutationEntities.push(perspective, head, data);
 
-      if (added) {
-        newPerspectives = await Promise.all(
-          added.map(async (persp) => {
-            const perspective = await this.ipfs.get(persp.perspectiveId);
-            const head = await this.ipfs.get(persp.headId);
-            const data = await this.ipfs.get(head.object.payload.dataId);
-
-            mutationEntities.push(perspective, head, data);
-
-            return {
-              perspective: perspective,
-              update: {
-                perspectiveId: perspective.id,
-                details: {
-                  headId: head.id,
-                  guardianId: persp.guardianId,
-                  canUpdate: persp.canUpdate,
-                },
-                indexData: {
-                  linkChanges: persp.linkChanges,
-                  text: persp.text,
-                },
-              },
-            };
-          })
-        );
-      }
-
-      // Collect IDs from delete perspectives
-      const deletedPerspectives = (data as HeadMutation).removed?.map(
-        (persp) => persp.perspectiveId
-      );
-
-      return {
-        newPerspectives,
-        updates,
-        deletedPerspectives,
-        entities: mutationEntities,
-      };
+      //     return {
+      //       perspective: perspective,
+      //       update: {
+      //         perspectiveId: perspective.id,
+      //         details: {
+      //           headId: head.id,
+      //           guardianId: persp.guardianId,
+      //           canUpdate: persp.canUpdate,
+      //         },
+      //         indexData: {
+      //           linkChanges: persp.linkChanges,
+      //           text: persp.text,
+      //         },
+      //       },
+      //     };
+      //   })
+      // );
     }
+
+    // Collect IDs from delete perspectives
+    const deletedPerspectives = (data as HeadMutation).removed?.map(
+      (persp) => persp.perspectiveId
+    );
+
+    return {
+      newPerspectives,
+      updates,
+      deletedPerspectives,
+      entities: mutationEntities,
+    };
   }
 
   getLogsDifference(
-    previous: HeadUpdateData,
-    event: HeadUpdateData
+    previous: UpdateContent[],
+    event: UpdateContent[]
   ): HeadMutation {
     let changes: any = [];
     let added: any = [];
     let removed: any = [];
 
     // First sort both arrays by perspectiveId.
-    const previousChanges = previous.object;
-    const latest = event.object;
+    const previousChanges = previous;
+    const latest = event;
     previousChanges.sort((a, b) =>
       a.perspectiveId > b.perspectiveId ? 1 : -1
     );
@@ -213,36 +230,20 @@ export class WatchmanService {
     };
   }
 
-  isHeadUpdatedEvent(blockchainData: any): boolean {
-    return blockchainData.event.id && blockchainData.event.object;
-  }
-
-  translateBlockToEventData(eventData: any): HeadUpdateData {
+  translateBlockToEventData(eventData: any): UpdateContent[] {
     // Initialize event data
-    let data: HeadUpdateData = {
-      id: eventData.id,
-      object: [
-        {
-          perspectiveId: '',
-          canUpdate: false,
-          headId: '',
-        },
-      ],
-    };
+    let data: UpdateContent[] = [];
 
-    Object.keys(eventData.object).forEach((key) => {
-      data.object.push({
+    Object.keys(eventData).forEach((key) => {
+      data.push({
         perspectiveId: key,
-        canUpdate: eventData.object[key].canUpdate,
-        guardianId: eventData.object[key].guardianId,
-        headId: eventData.object[key].headId,
-        linkChanges: eventData.object[key].linkChanges,
-        text: eventData.object[key].text,
+        canUpdate: eventData[key].canUpdate,
+        guardianId: eventData[key].guardianId,
+        headId: eventData[key].headId,
+        linkChanges: eventData[key].linkChanges,
+        text: eventData[key].text,
       });
     });
-
-    // We remove the first element used as a placeholder.
-    data.object.splice(0, 1);
     return data;
   }
 }
