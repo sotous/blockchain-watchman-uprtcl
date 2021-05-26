@@ -1,6 +1,5 @@
 import { ethers } from 'ethers';
 import { abi } from '../utils/UprtclRoot.min.json';
-import { IpfsStore } from '@uprtcl/ipfs-provider';
 import { HeadUpdatedEvent } from './HeadUpdated.event';
 import { WatchmanService } from '../services/watchman/watchman.service';
 
@@ -15,11 +14,7 @@ export class EthersService {
   event: any;
   blockNotification: any;
 
-  constructor(
-    private watchmanService: WatchmanService,
-    private ipfs: IpfsStore
-  ) {
-    console.log('HEY');
+  constructor(private watchmanService: WatchmanService, private ipfs: any) {
     this.connectionReady = new Promise<void>(async (resolve) => {
       await this.connect();
       resolve();
