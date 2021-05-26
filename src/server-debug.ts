@@ -5,7 +5,7 @@ import express from 'express';
 import middleware from './middleware';
 import errorHandlers from './middleware/errorHandlers';
 import { applyMiddleware, applyRoutes } from './utils';
-import { routes } from './services/routes-debug';
+import { getRoutes } from './services/routes-debug';
 
 process.on('uncaughtException', (e) => {
   console.log(e);
@@ -17,17 +17,22 @@ process.on('unhandledRejection', (e) => {
   process.exit(1);
 });
 
-const router = express();
-router.use(express.json({ limit: '50mb' }));
-applyMiddleware(middleware, router);
-applyRoutes(routes, router);
-applyMiddleware(errorHandlers, router);
+export const createApp = async () => {
+  const router = express();
+  router.use(express.json({ limit: '50mb' }));
 
-const { PORT = 3000 } = process.env;
-const server = http.createServer(router);
+  const routes = await getRoutes();
+  applyMiddleware(middleware, router);
+  applyRoutes(routes, router);
+  applyMiddleware(errorHandlers, router);
 
-server.listen(PORT, () =>
-  console.log(`Server is running http://localhost:${PORT}...`)
-);
+  return router;
+};
 
-export { router };
+const { PORT = 3100 } = process.env;
+
+createApp().then((router) => {
+  http.createServer(router).listen(PORT, () => {
+    console.log(`Server is running http://localhost:${PORT}.`);
+  });
+});
