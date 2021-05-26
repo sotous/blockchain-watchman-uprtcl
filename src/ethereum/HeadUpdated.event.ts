@@ -1,10 +1,9 @@
 import { ethers } from 'ethers';
-import { IpfsStore } from '@uprtcl/ipfs-provider';
 import { abi } from '../utils/UprtclRoot.min.json';
 import { WatchmanController } from '../services/watchman/watchman.controller';
 import { WatchmanService } from '../services/watchman/watchman.service';
-import { WatchmanRepository } from '../services/watchman/watchman.repository';
 import { bytes32ToCid, LinkChanges } from '@uprtcl/evees';
+import CBOR from 'cbor-js';
 
 export const NEW_INTERACTION = 'new_interaction';
 export interface HeadUpdateData {
@@ -27,6 +26,17 @@ export interface HeadMutation {
   removed?: UpdateContent[];
 }
 
+export const getContentFromHash = async (
+  hash: string,
+  ipfs: any
+): Promise<any> => {
+  console.log('[IPFS] Retrieving content from hash => ', hash);
+  const raw = await ipfs.dag.get(hash);
+  const forceBuffer = Uint8Array.from(raw.value);
+  console.log('[IPFS] Success retrieving hash content for ', hash);
+  return CBOR.decode(forceBuffer.buffer);
+};
+
 export class HeadUpdatedEvent {
   blockNotification: any;
 
@@ -34,7 +44,7 @@ export class HeadUpdatedEvent {
     private contract: any,
     private eventName: string,
     private provider: ethers.providers.JsonRpcProvider,
-    private ipfs: IpfsStore,
+    private ipfs: any,
     private filter: any,
     private watchmanService: WatchmanService
   ) {
@@ -50,6 +60,8 @@ export class HeadUpdatedEvent {
          * and the inmediate previous data too on this event.
          */
 
+        console.log('[Blockchain Microservice] - Interaction detected.');
+
         // Filter logs by user.
         this.filter.from = author;
 
@@ -59,10 +71,8 @@ export class HeadUpdatedEvent {
           this.provider,
           this.ipfs
         );
-        // If the hash is different, changes might be present.
-        if (data.previous && data.event.id !== data.previous.id) {
-          this.blockNotification.emit(NEW_INTERACTION, data);
-        }
+
+        this.blockNotification.emit(NEW_INTERACTION, data);
       }
     );
   }
@@ -72,12 +82,12 @@ export class HeadUpdatedEvent {
     val0: string,
     val1: string,
     provider: ethers.providers.JsonRpcProvider,
-    ipfs: IpfsStore // Used to retrieve entities from a hash.
+    ipfs: any // Used to retrieve entities from a hash.
   ) {
     // Called when there is an update
     // We convert the val0 and val1 into the perspective hash.
     const newHash = bytes32ToCid([val0, val1]);
-    const eventData = await ipfs.get(newHash);
+    let eventData = await getContentFromHash(newHash, ipfs);
 
     try {
       const logs = await provider.getLogs(this.filter);
@@ -113,7 +123,7 @@ export class HeadUpdatedEvent {
           decodedDataRaw.val0,
         ]);
 
-        const previousData = await ipfs.get(oldHash);
+        let previousData = await getContentFromHash(oldHash, ipfs);
 
         return {
           event: eventData,
