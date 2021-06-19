@@ -1,7 +1,7 @@
 import { EthersService } from '../ethereum/ethers.service';
 import { WatchmanRepository } from './watchman/watchman.repository';
 import { WatchmanService } from './watchman/watchman.service';
-import IPFS from 'ipfs';
+const IPFS = require('ipfs-core');
 
 export const getRoutes = async () => {
   // Create IPFS node to be able to retrieve hashes.
