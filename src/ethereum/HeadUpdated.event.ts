@@ -3,7 +3,8 @@ import { abi } from '../utils/UprtclRoot.min.json';
 import { WatchmanController } from '../services/watchman/watchman.controller';
 import { WatchmanService } from '../services/watchman/watchman.service';
 import { bytes32ToCid, LinkChanges } from '@uprtcl/evees';
-import CBOR from 'cbor-js';
+import CBOR from 'cbor';
+import CID from 'cids';
 
 export const NEW_INTERACTION = 'new_interaction';
 export interface HeadUpdateData {
@@ -30,8 +31,9 @@ export const getContentFromHash = async (
   hash: string,
   ipfs: any
 ): Promise<any> => {
+  const cid = new CID(hash);
   console.log('[IPFS] Retrieving content from hash => ', hash);
-  const raw = await ipfs.dag.get(hash);
+  const raw = await ipfs.dag.get(cid);
   const forceBuffer = Uint8Array.from(raw.value);
   console.log('[IPFS] Success retrieving hash content for ', hash);
   return CBOR.decode(forceBuffer.buffer);
