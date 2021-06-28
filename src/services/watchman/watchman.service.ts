@@ -60,9 +60,9 @@ export class WatchmanService {
           mutationEntities.push(perspective, head, data);
 
           return {
-            perspectiveId: perspective.id,
+            perspectiveId: persp.perspectiveId,
             details: {
-              headId: '', //head.id,
+              headId: persp.headId,
               guardianId: persp.guardianId,
               canUpdate: persp.canUpdate,
             },
@@ -91,9 +91,9 @@ export class WatchmanService {
           return {
             perspective: perspective,
             update: {
-              perspectiveId: perspective.id,
+              perspectiveId: persp.perspectiveId,
               details: {
-                headId: '', //head.id,
+                headId: persp.headId,
                 guardianId: persp.guardianId,
                 canUpdate: persp.canUpdate,
               },
