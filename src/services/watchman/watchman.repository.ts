@@ -1,15 +1,22 @@
 import { EveesMutationCreate } from '@uprtcl/evees';
+import { HttpEntityRemote } from '@uprtcl/evees-http';
 export class WatchmanRepository {
-  constructor() {}
+  entityRemote: HttpEntityRemote;
+
+  constructor(httpEntityRemote: HttpEntityRemote) {
+    this.entityRemote = httpEntityRemote;
+  }
 
   async postNewUpdate(mutation: EveesMutationCreate): Promise<void> {
     console.log(mutation);
-    console.log('Posting updates . . .');
+    if (mutation.entities) {
+      await this.entityRemote.persistEntities(mutation.entities);
+    }
+    //this.httpEntityRemote.
     // const httpConnection = await new HttpSupertest(
     //   process.env.HOST as string,
     //   user
     // );
-
     // const httpStore = new HttpStore(httpConnection, httpCidConfig);
     // const httpEvees = new EveesHttp(httpConnection, httpStore.casID);
     // TODO: Prepare HttpStore to send data to server.
