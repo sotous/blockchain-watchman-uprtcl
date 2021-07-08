@@ -1,5 +1,5 @@
 import { WatchmanService } from './watchman.service';
-import { NEW_INTERACTION } from '../../ethereum/HeadUpdated.event';
+import { NEW_INTERACTION } from '../../utils/types';
 const EventEmitter = require('events');
 
 export class WatchmanController extends EventEmitter {
