@@ -1,4 +1,4 @@
-import { UpdateContent, HeadMutation } from '../../ethereum/HeadUpdated.event';
+import { UpdateContent, HeadMutation, EveeEntity } from '../../utils/types';
 import {
   EveesMutationCreate,
   Entity,
@@ -7,9 +7,17 @@ import {
 } from '@uprtcl/evees';
 import { WatchmanRepository } from './watchman.repository';
 import { getContentFromHash } from '../../ethereum/HeadUpdated.event';
-
+import { HttpEntityRemote } from '@uprtcl/evees-http';
 export class WatchmanService {
-  constructor(private ipfs: any, private watchmanRepo: WatchmanRepository) {}
+  entityRemote: HttpEntityRemote;
+
+  constructor(
+    private ipfs: any,
+    private watchmanRepo: WatchmanRepository,
+    private httpEntityRemote: HttpEntityRemote
+  ) {
+    this.entityRemote = httpEntityRemote;
+  }
   async postNewUpdate(blockchainData: any): Promise<void> {
     const previous = blockchainData.previous
       ? this.translateBlockToEventData(blockchainData.previous)
@@ -49,13 +57,9 @@ export class WatchmanService {
       // For change elements return updates.
       updates = await Promise.all(
         changes.map(async (persp) => {
-          const perspective = await getContentFromHash(
-            persp.perspectiveId,
-            this.ipfs
+          const { perspective, head, data } = await this.unpackAndBuildEntities(
+            persp
           );
-
-          const head = await getContentFromHash(persp.headId, this.ipfs);
-          const data = await getContentFromHash(head.payload.dataId, this.ipfs);
 
           mutationEntities.push(perspective, head, data);
 
@@ -79,17 +83,14 @@ export class WatchmanService {
       // For change elements return updates.
       newPerspectives = await Promise.all(
         added.map(async (persp) => {
-          const perspective = await getContentFromHash(
-            persp.perspectiveId,
-            this.ipfs
+          const { perspective, head, data } = await this.unpackAndBuildEntities(
+            persp
           );
-          const head = await getContentFromHash(persp.headId, this.ipfs);
-          const data = await getContentFromHash(head.payload.dataId, this.ipfs);
 
           mutationEntities.push(perspective, head, data);
 
           return {
-            perspective: perspective,
+            perspective: perspective.object,
             update: {
               perspectiveId: persp.perspectiveId,
               details: {
@@ -117,6 +118,29 @@ export class WatchmanService {
       updates,
       deletedPerspectives,
       entities: mutationEntities,
+    };
+  }
+
+  async unpackAndBuildEntities(content: UpdateContent): Promise<EveeEntity> {
+    const perspectiveObject = await getContentFromHash(
+      content.perspectiveId,
+      this.ipfs
+    );
+
+    const headObject = await getContentFromHash(content.headId, this.ipfs);
+    const dataObject = await getContentFromHash(
+      headObject.payload.dataId,
+      this.ipfs
+    );
+
+    const perspective = await this.entityRemote.hash(perspectiveObject);
+    const head = await this.entityRemote.hash(headObject);
+    const data = await this.entityRemote.hash(dataObject);
+
+    return {
+      perspective,
+      head,
+      data,
     };
   }
 
