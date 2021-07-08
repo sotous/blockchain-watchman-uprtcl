@@ -3,7 +3,7 @@ import { HttpEntityRemote } from '@uprtcl/evees-http';
 export class WatchmanRepository {
   entityRemote: HttpEntityRemote;
 
-  constructor(httpEntityRemote: HttpEntityRemote) {
+  constructor(private httpEntityRemote: HttpEntityRemote) {
     this.entityRemote = httpEntityRemote;
   }
 
