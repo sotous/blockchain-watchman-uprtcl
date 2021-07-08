@@ -2,30 +2,10 @@ import { ethers } from 'ethers';
 import { abi } from '../utils/UprtclRoot.min.json';
 import { WatchmanController } from '../services/watchman/watchman.controller';
 import { WatchmanService } from '../services/watchman/watchman.service';
-import { bytes32ToCid, LinkChanges } from '@uprtcl/evees';
+import { bytes32ToCid } from '@uprtcl/evees';
 import CBOR from 'cbor';
 import CID from 'cids';
-
-export const NEW_INTERACTION = 'new_interaction';
-export interface HeadUpdateData {
-  id: string;
-  object: UpdateContent[];
-}
-
-export interface UpdateContent {
-  perspectiveId: string;
-  canUpdate: boolean;
-  guardianId?: string;
-  headId: string;
-  linkChanges?: LinkChanges;
-  text?: string;
-}
-
-export interface HeadMutation {
-  changes?: UpdateContent[];
-  added?: UpdateContent[];
-  removed?: UpdateContent[];
-}
+import { NEW_INTERACTION } from '../utils/types';
 
 export const getContentFromHash = async (
   hash: string,
