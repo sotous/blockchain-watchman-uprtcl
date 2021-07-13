@@ -1,47 +1,32 @@
 import { EthersService } from '../ethereum/ethers.service';
-import { Auth0Connection } from '../middleware/authentication';
-import { Auth0ClientOptions } from '@auth0/auth0-spa-js';
-import { HttpAuth0Connection } from '@uprtcl/http-provider';
+import { HttpEthConnection, HttpEthTokenServer } from '@uprtcl/http-provider';
 import { HttpEntityRemote } from '@uprtcl/evees-http';
 import { WatchmanRepository } from './watchman/watchman.repository';
 import { WatchmanService } from './watchman/watchman.service';
 const IPFS = require('ipfs-core');
 
 export const getRoutes = async () => {
-  // const auth0 = new Auth0Connection(
-  //   process.env.AUTH0_HOST as string,
-  //   process.env.CLIENT_ID as string,
-  //   process.env.CLIENT_SECRET as string,
-  //   process.env.AUTH0_AUDIENCE as string,
-  //   process.env.GRANT_TYPE as string
-  // );
-
-  // const jwtToken = await auth0.jwtToken;
-
-  const auth0Config: Auth0ClientOptions = {
-    domain: process.env.AUTH0_DOMAIN || '',
-    client_id: process.env.CLIENT_ID || '',
-    client_secret: process.env.CLIENT_SECRET,
-    audience: process.env.AUTH0_AUDIENCE,
-    grant_type: process.env.GRANT_TYPE,
-  };
-
-  // We request microservice authentication against Auth0
-  const auth0HttpConnection = new HttpAuth0Connection(
-    process.env.WEB_SERVER || '',
-    auth0Config
-  );
-
-  // Then we attach the authenticated connection to the remote.
-  //const httpRemote = new HttpEntityRemote(auth0HttpConnection);
-
   // Create IPFS node to be able to retrieve hashes.
   const ipfs = await IPFS.create();
+
+  // We request microservice authentication against ETH
+  const ethHttpConnection = new HttpEthConnection(
+    process.env.WEB_SERVER || '',
+    new HttpEthTokenServer(
+      'http://localhost:3100/uprtcl/1',
+      'announce room limb pattern dry unit scale effort smooth jazz weasel alcohol'
+    )
+  );
+
+  await ethHttpConnection.login();
+
+  // Then we attach the authenticated connection to the remote.
+  const httpRemote = new HttpEntityRemote(ethHttpConnection);
+
   // We provide the remote.
-  //const watchmanRepo = new WatchmanRepository(httpRemote);
-  // const watchmanService = new WatchmanService(ipfs, watchmanRepo);
+  const watchmanRepo = new WatchmanRepository(httpRemote);
+  const watchmanService = new WatchmanService(ipfs, watchmanRepo, httpRemote);
 
-  // const ethService = new EthersService(watchmanService, ipfs);
-
+  const ethService = new EthersService(watchmanService, ipfs);
   return [];
 };
