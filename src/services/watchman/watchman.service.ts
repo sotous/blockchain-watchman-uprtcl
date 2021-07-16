@@ -90,7 +90,7 @@ export class WatchmanService {
           mutationEntities.push(perspective, head, data);
 
           return {
-            perspective: perspective.object,
+            perspective: perspective,
             update: {
               perspectiveId: persp.perspectiveId,
               details: {
