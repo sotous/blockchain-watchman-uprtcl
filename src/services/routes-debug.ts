@@ -13,8 +13,8 @@ export const getRoutes = async () => {
   const ethHttpConnection = new HttpEthConnection(
     process.env.WEB_SERVER || '',
     new HttpEthTokenServer(
-      'http://localhost:3100/uprtcl/1',
-      'announce room limb pattern dry unit scale effort smooth jazz weasel alcohol'
+      process.env.WEB_SERVER || '',
+      process.env.MNEMONIC || ''
     )
   );
 
