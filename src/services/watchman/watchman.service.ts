@@ -87,7 +87,18 @@ export class WatchmanService {
             persp
           );
 
-          mutationEntities.push(perspective, head, data);
+          // Checks for duplicated data.
+          const dataIndex = mutationEntities
+            .map((mutation) => {
+              return mutation.hash;
+            })
+            .indexOf(data.hash);
+
+          mutationEntities.push(perspective, head);
+
+          if (dataIndex < 0) {
+            mutationEntities.push(data);
+          }
 
           return {
             perspective: perspective,
@@ -133,9 +144,23 @@ export class WatchmanService {
       this.ipfs
     );
 
-    const perspective = await this.entityRemote.hash(perspectiveObject);
-    const head = await this.entityRemote.hash(headObject);
-    const data = await this.entityRemote.hash(dataObject);
+    const perspective = {
+      hash: content.perspectiveId,
+      object: perspectiveObject,
+      remote: perspectiveObject.payload.remote,
+    };
+
+    const head = {
+      hash: content.headId,
+      object: headObject,
+      remote: perspectiveObject.payload.remote,
+    };
+
+    const data = {
+      hash: headObject.payload.dataId,
+      object: dataObject,
+      remote: perspectiveObject.payload.remote,
+    };
 
     return {
       perspective,
