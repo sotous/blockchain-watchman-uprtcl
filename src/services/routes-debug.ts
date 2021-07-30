@@ -25,7 +25,7 @@ export const getRoutes = async () => {
 
   // We provide the remote.
   const watchmanRepo = new WatchmanRepository(httpRemote);
-  const watchmanService = new WatchmanService(ipfs, watchmanRepo, httpRemote);
+  const watchmanService = new WatchmanService(ipfs, watchmanRepo);
 
   const ethService = new EthersService(watchmanService, ipfs);
 
