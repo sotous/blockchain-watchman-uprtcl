@@ -5,7 +5,7 @@ import { WatchmanService } from '../services/watchman/watchman.service';
 import { bytes32ToCid } from '@uprtcl/evees';
 import CBOR from 'cbor';
 import CID from 'cids';
-import { NEW_INTERACTION } from '../utils/types';
+import { NEW_INTERACTION, BlockchainEvents } from '../utils/types';
 
 export const getContentFromHash = async (
   hash: string,
@@ -36,7 +36,7 @@ export class HeadUpdatedEvent {
   public async watch() {
     this.contract.on(
       this.eventName,
-      async (author: any, val0: any, val1: any, event: any) => {
+      async (author: string, val0: string, val1: string, event: any) => {
         /**
          * We retrieve the new incoming data from the event
          * and the inmediate previous data too on this event.
@@ -65,7 +65,7 @@ export class HeadUpdatedEvent {
     val1: string,
     provider: ethers.providers.JsonRpcProvider,
     ipfs: any // Used to retrieve entities from a hash.
-  ) {
+  ): Promise<BlockchainEvents> {
     // Called when there is an update
     // We convert the val0 and val1 into the perspective hash.
     const newHash = bytes32ToCid([val0, val1]);
@@ -108,13 +108,13 @@ export class HeadUpdatedEvent {
         let previousData = await getContentFromHash(oldHash, ipfs);
 
         return {
-          event: eventData,
-          previous: previousData,
+          current: Object.keys(eventData).map((key) => eventData[key]),
+          previous: Object.keys(previousData).map((key) => previousData[key]),
         };
       }
 
       return {
-        event: eventData,
+        current: Object.keys(eventData).map((key) => eventData[key]),
       };
     } catch (e) {
       throw new Error(`Could not get logs data from event. ${e}`);
