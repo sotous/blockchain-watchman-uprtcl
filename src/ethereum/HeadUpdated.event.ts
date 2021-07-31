@@ -5,7 +5,8 @@ import { WatchmanService } from '../services/watchman/watchman.service';
 import { bytes32ToCid } from '@uprtcl/evees';
 import CBOR from 'cbor';
 import CID from 'cids';
-import { NEW_INTERACTION, BlockchainEvents } from '../utils/types';
+import { BlockchainEvents } from '@uprtcl/evees-blockchain';
+import { NEW_INTERACTION } from '../middleware/common';
 
 export const getContentFromHash = async (
   hash: string,

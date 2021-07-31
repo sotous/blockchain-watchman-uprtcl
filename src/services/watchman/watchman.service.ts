@@ -2,7 +2,7 @@ import {
   BlockchainMutation,
   EveeEntity,
   BlockchainEvents,
-} from '../../utils/types';
+} from '@uprtcl/evees-blockchain';
 import {
   EveesMutationCreate,
   Entity,

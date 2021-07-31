@@ -14,3 +14,5 @@ export const handleBodyRequestParsing = (router: Router) => {
 export const handleCompression = (router: Router) => {
   router.use(compression());
 };
+
+export const NEW_INTERACTION = 'new_interaction';

@@ -1,5 +1,3 @@
-import { ethers } from 'ethers';
-import { abi } from '../utils/UprtclRoot.min.json';
 import { HeadUpdatedEvent } from './HeadUpdated.event';
 import { WatchmanService } from '../services/watchman/watchman.service';
 

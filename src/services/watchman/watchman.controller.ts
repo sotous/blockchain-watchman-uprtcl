@@ -1,5 +1,6 @@
 import { WatchmanService } from './watchman.service';
-import { BlockchainEvents, NEW_INTERACTION } from '../../utils/types';
+import { BlockchainEvents } from '@uprtcl/evees-blockchain';
+import { NEW_INTERACTION } from '../../middleware/common';
 const EventEmitter = require('events');
 
 export class WatchmanController extends EventEmitter {
