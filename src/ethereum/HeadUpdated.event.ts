@@ -20,7 +20,7 @@ export const getContentFromHash = async (
 };
 
 export class HeadUpdatedEvent {
-  blockNotification: any;
+  blockNotification: WatchmanController;
 
   constructor(
     private contract: any,
@@ -81,12 +81,12 @@ export class HeadUpdatedEvent {
       );
       // getting the specified event, then pulling it out of the array
       const event = events.filter(
-        (event) => event.name === process.env.MAIN_EVENT
+        (event) => event.name === process.env.TARGET_EVENT
       )[0];
 
       // Knowing which types are indexed will be useful later
-      let indexedInputs: any = [];
-      let unindexedInputs: any = [];
+      let indexedInputs: string[] = [];
+      let unindexedInputs: string[] = [];
       event.inputs.forEach((input: any) => {
         input.indexed ? indexedInputs.push(input) : unindexedInputs.push(input);
       });
