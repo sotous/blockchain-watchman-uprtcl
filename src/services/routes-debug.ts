@@ -1,10 +1,17 @@
 import { EthersService } from '../ethereum/ethers.service';
 import { HttpEthConnection, HttpEthTokenServer } from '@uprtcl/http-provider';
-import { HttpEntityRemote } from '@uprtcl/evees-http';
+import { EveesHttp, HttpEntityRemote } from '@uprtcl/evees-http';
+import {
+  initEntityResolver,
+  ClientRemote,
+  RemoteExploreCachedOnMemory,
+} from '@uprtcl/evees';
 import { WatchmanRepository } from './watchman/watchman.repository';
 import { WatchmanService } from './watchman/watchman.service';
 import { EveesEthereumConnection } from '@uprtcl/evees-ethereum';
 import { EthereumConnection } from '@uprtcl/ethereum-provider';
+import { IpfsStore } from '@uprtcl/ipfs-provider';
+import { EveesBlockchain } from '@uprtcl/evees-blockchain';
 
 require('dotenv').config();
 
@@ -12,7 +19,17 @@ const IPFS = require('ipfs-core');
 
 export const getRoutes = async () => {
   // Create IPFS node to be able to retrieve hashes.
+  const ipfsCidConfig: any = {
+    version: 1,
+    type: 'sha2-256',
+    codec: 'raw',
+    base: 'base58btc',
+  };
+
   const ipfs = await IPFS.create();
+
+  const ipfsStore = new IpfsStore(ipfsCidConfig, ipfs);
+  await ipfsStore.ready();
 
   // We request microservice authentication against ETH
   const ethHttpConnection = new HttpEthConnection(
@@ -28,10 +45,6 @@ export const getRoutes = async () => {
   // Then we attach the authenticated connection to the remote.
   const httpRemote = new HttpEntityRemote(ethHttpConnection);
 
-  // We provide the remote.
-  const watchmanRepo = new WatchmanRepository(httpRemote);
-  const watchmanService = new WatchmanService(ipfs, watchmanRepo);
-
   // Connects with blockchain.
   const ethConnection = new EthereumConnection({
     provider: process.env.ETH_PROVIDER || '',
@@ -40,9 +53,26 @@ export const getRoutes = async () => {
   const ethEveesConnection = new EveesEthereumConnection(ethConnection);
   await ethEveesConnection.ready();
 
-  const contract = ethEveesConnection.uprtclRoot.contractInstance;
+  // Create an entityResolver.
+  const ethEvees = new EveesBlockchain(
+    ethEveesConnection,
+    ipfsStore,
+    new RemoteExploreCachedOnMemory(new EveesHttp(ethHttpConnection))
+  );
+  let clientRemotes: ClientRemote[] = [ethEvees];
+  const entityResolver = initEntityResolver(clientRemotes);
 
-  const ethService = new EthersService(contract, watchmanService, ipfs);
+  // We provide the remote.
+  const watchmanRepo = new WatchmanRepository(httpRemote);
+  const watchmanService = new WatchmanService(entityResolver, watchmanRepo);
+
+  // Call contract and create eth service.
+  const contract = ethEveesConnection.uprtclRoot.contractInstance;
+  const ethService = new EthersService(
+    contract,
+    watchmanService,
+    entityResolver
+  );
 
   return [];
 };
