@@ -1,5 +1,6 @@
 import { HeadUpdatedEvent } from './HeadUpdated.event';
 import { WatchmanService } from '../services/watchman/watchman.service';
+import { EntityResolver } from '@uprtcl/evees';
 
 require('dotenv').config();
 
@@ -11,7 +12,7 @@ export class EthersService {
   constructor(
     private contract: any,
     private watchmanService: WatchmanService,
-    private ipfs: any
+    private entityResolver: EntityResolver
   ) {
     this.contract = contract;
     this.provider = contract.provider;
@@ -30,7 +31,7 @@ export class EthersService {
         this.contract,
         eventName,
         this.provider,
-        this.ipfs,
+        this.entityResolver,
         filter,
         this.watchmanService
       );

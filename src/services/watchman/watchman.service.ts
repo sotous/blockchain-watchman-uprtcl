@@ -1,26 +1,32 @@
 import {
-  BlockchainMutation,
+  ChainMutation,
   EveeEntity,
-  BlockchainEvents,
+  ChainEvents,
 } from '@uprtcl/evees-blockchain';
 import {
   EveesMutationCreate,
   Entity,
   NewPerspective,
+  Perspective,
   Update,
+  Secured,
+  Commit,
 } from '@uprtcl/evees';
 import { WatchmanRepository } from './watchman.repository';
-import { getContentFromHash } from '../../ethereum/HeadUpdated.event';
+import { EntityResolver } from '@uprtcl/evees';
 export class WatchmanService {
-  constructor(private ipfs: any, private watchmanRepo: WatchmanRepository) {}
+  constructor(
+    private entityResolver: EntityResolver,
+    private watchmanRepo: WatchmanRepository
+  ) {}
 
-  async postNewUpdate(blockchainEvents: BlockchainEvents): Promise<void> {
+  async postNewUpdate(blockchainEvents: ChainEvents): Promise<void> {
     let update;
     const { current, previous } = blockchainEvents;
 
     // Look for any previous event to current.
     if (!previous) {
-      const headMutation: BlockchainMutation = {
+      const headMutation: ChainMutation = {
         added: current,
       };
       update = headMutation;
@@ -36,7 +42,7 @@ export class WatchmanService {
   }
 
   async buildEveesMutation(
-    data: BlockchainMutation
+    data: ChainMutation
   ): Promise<EveesMutationCreate | undefined> {
     let mutationEntities: Entity[] = [];
 
@@ -83,7 +89,7 @@ export class WatchmanService {
     );
 
     // Collect IDs from delete perspectives
-    const deletedPerspectives = (data as BlockchainMutation).removed?.map(
+    const deletedPerspectives = (data as ChainMutation).removed?.map(
       (update: Update) => update.perspectiveId
     );
 
@@ -96,41 +102,24 @@ export class WatchmanService {
   }
 
   async unpackAndBuildEntities(update: Update): Promise<EveeEntity> {
-    const perspectiveObject = await getContentFromHash(
-      update.perspectiveId,
-      this.ipfs
+    const perspective = await this.entityResolver.getEntity<
+      Secured<Perspective>
+    >(update.perspectiveId);
+    const head = await this.entityResolver.getEntity<any>(
+      update.details.headId || ''
     );
-
-    const headObject = await getContentFromHash(
-      update.details.headId || '',
-      this.ipfs
-    );
-
-    const dataObject = await getContentFromHash(
-      headObject.payload.dataId,
-      this.ipfs
+    const data = await this.entityResolver.getEntity<Object>(
+      head.object.payload.dataId
     );
 
     return {
-      perspective: {
-        hash: update.perspectiveId,
-        object: perspectiveObject,
-        remote: perspectiveObject.payload.remote,
-      },
-      head: {
-        hash: update.details.headId || '',
-        object: headObject,
-        remote: perspectiveObject.payload.remote,
-      },
-      data: {
-        hash: headObject.payload.dataId,
-        object: dataObject,
-        remote: perspectiveObject.payload.remote,
-      },
+      perspective,
+      head,
+      data,
     };
   }
 
-  getLogsDifference(previous: Update[], event: Update[]): BlockchainMutation {
+  getLogsDifference(previous: Update[], event: Update[]): ChainMutation {
     let changes: Update[] = [];
     let added: Update[] = [];
     let removed: Update[] = [];
