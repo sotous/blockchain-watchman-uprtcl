@@ -8,6 +8,12 @@ export class WatchmanRepository {
   }
 
   async postNewUpdate(mutation: EveesMutationCreate): Promise<void> {
-    await this.entityRemote.updateSu(mutation);
+    console.log('[IPFS] - Success.');
+    try {
+      await this.entityRemote.updateSu(mutation);
+      console.log('[Blockchain Microservice] - Content successfully mirrored.');
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 }
