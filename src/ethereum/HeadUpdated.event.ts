@@ -50,7 +50,6 @@ export class HeadUpdatedEvent {
     // Called when there is an update
     // We convert the val0 and val1 into the perspective hash.
     const newHash = bytes32ToCid([val0, val1]);
-    //let eventData = await getContentFromHash(newHash, entityResolver);
     let eventData = await this.entityResolver.getEntity<ChainUpdate>(newHash);
 
     try {
