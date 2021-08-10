@@ -57,7 +57,18 @@ export class WatchmanService {
         const { perspective, head, data } = await this.unpackAndBuildEntities(
           update
         );
-        mutationEntities.push(perspective, head, data);
+
+        // Checks for duplicated data.
+        const dataIndex = mutationEntities
+          .map((mutation) => {
+            return mutation.hash;
+          })
+          .indexOf(data.hash);
+
+        if (dataIndex < 0) {
+          mutationEntities.push(data);
+        }
+        mutationEntities.push(perspective, head);
       })
     );
 
