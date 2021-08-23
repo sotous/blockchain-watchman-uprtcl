@@ -39,7 +39,6 @@
     "compression": "^1.7.4",
     "dotenv": "^8.1.0",
     "ethers": "^5.1.4",
-    "ipfs-core": "^0.7.1",
     "multihashing-async": "^2.1.2",
     "request": "^2.88.2",
     "request-promise": "^4.2.4",

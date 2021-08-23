@@ -15,8 +15,6 @@ import { EveesBlockchain } from '@uprtcl/evees-blockchain';
 
 require('dotenv').config();
 
-const IPFS = require('ipfs-core');
-
 export const getRoutes = async () => {
   // Create IPFS node to be able to retrieve hashes.
   const ipfsCidConfig: any = {
@@ -26,10 +24,12 @@ export const getRoutes = async () => {
     base: 'base58btc',
   };
 
-  const ipfs = await IPFS.create();
-
-  const ipfsStore = new IpfsStore(ipfsCidConfig, ipfs);
-  await ipfsStore.ready();
+  // IPFS proposed persistence system
+  const ipfsStore = new IpfsStore(ipfsCidConfig, {
+    protocol: 'http',
+    host: '127.0.0.1',
+    port: 5002,
+  });
 
   // We request microservice authentication against ETH
   const ethHttpConnection = new HttpEthConnection(
