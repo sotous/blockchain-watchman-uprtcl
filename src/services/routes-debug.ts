@@ -26,9 +26,9 @@ export const getRoutes = async () => {
 
   // IPFS proposed persistence system
   const ipfsStore = new IpfsStore(ipfsCidConfig, {
-    protocol: 'http',
-    host: '127.0.0.1',
-    port: 5002,
+    protocol: process.env.IPFS_PROTOCOL || '',
+    host: process.env.IPFS_HOST || '',
+    port: parseInt(process.env.IPFS_PORT || '80'),
   });
 
   // We request microservice authentication against ETH

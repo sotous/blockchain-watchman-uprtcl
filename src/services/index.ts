@@ -13,8 +13,6 @@ import { EthereumConnection } from '@uprtcl/ethereum-provider';
 import { IpfsStore } from '@uprtcl/ipfs-provider';
 import { EveesBlockchain } from '@uprtcl/evees-blockchain';
 
-const IPFS = require('ipfs-core');
-
 export const getRoutes = async () => {
   // Create IPFS node to be able to retrieve hashes.
   const ipfsCidConfig: any = {
@@ -25,9 +23,9 @@ export const getRoutes = async () => {
   };
 
   const ipfsStore = new IpfsStore(ipfsCidConfig, {
-    protocol: 'http',
-    host: '127.0.0.1',
-    port: 5002,
+    protocol: process.env.IPFS_PROTOCOL || '',
+    host: process.env.IPFS_HOST || '',
+    port: parseInt(process.env.IPFS_PORT || '80'),
   });
 
   // We request microservice authentication against ETH
