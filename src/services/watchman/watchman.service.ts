@@ -143,16 +143,28 @@ export class WatchmanService {
     );
     latest.sort((a, b) => (a.perspectiveId > b.perspectiveId ? 1 : -1));
 
-    // Detect added or removed perspectives.
+    // Detect added perspectives.
     if (previousChanges.length !== latest.length) {
       added = latest.filter(this.updatesComparer(previousChanges));
-      removed = previousChanges.filter(this.updatesComparer(latest));
     }
+
+    // Detect removed perspectives.
+    const indexRemoved = latest.reduce((elementsRemoved, persp) => {
+      persp.indexData?.linkChanges?.children?.removed.map((el) =>
+        elementsRemoved.push(el)
+      );
+      return elementsRemoved;
+    }, [] as string[]);
+
+    removed = latest.filter(
+      (persp) => indexRemoved.indexOf(persp.perspectiveId) > -1
+    );
 
     // Gets modifications to persistent information.
     previousChanges.map((previous) => {
       latest.map((current) => {
         if (previous.perspectiveId === current.perspectiveId) {
+          const isAdelete = indexRemoved.indexOf(current.perspectiveId) > -1;
           const canUpdate =
             previous.details.canUpdate !== current.details.canUpdate
               ? current.details.canUpdate
@@ -175,7 +187,14 @@ export class WatchmanService {
               : undefined;
 
           if (
-            !(!canUpdate && !headId && !guardianId && !linkChanges && !text)
+            !(
+              !canUpdate &&
+              !headId &&
+              !guardianId &&
+              !linkChanges &&
+              !text &&
+              !isAdelete
+            )
           ) {
             changes.push(current);
           }
