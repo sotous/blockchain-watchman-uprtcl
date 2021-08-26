@@ -80,3 +80,6 @@ npm run dev
 ```
 
 Now open `localhost:8002` on your browser and you should see the application. Use Metamask as the login tool.
+
+> Quick Start Option
+> [See here to quick start](#https://github.com/sotous/js-uprtcl-dev/edit/eth-refactor/README.md)
