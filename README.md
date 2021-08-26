@@ -6,8 +6,8 @@ It intends to index data off chain throught [js-uprtcl-server](https://github.co
 
 To hack, test or try this microservice it is recommended to have a Web3 environment setup in your machine, which means to have the following services available and ready:
 
-> Quick Start Option
-> [See here to quick start](#https://github.com/sotous/js-uprtcl-dev/edit/eth-refactor/README.md)
+> ### Quick Start Option
+> [Click here to quick start](https://github.com/sotous/js-uprtcl-dev/tree/eth-refactor#quick-start)
 
 - [Web Server](https://github.com/sotous/js-uprtcl-server/tree/eth-refactor): Check it's README file, but you need to create an `.env` file and run dgraph with docker.
 
