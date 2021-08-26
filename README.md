@@ -1,8 +1,10 @@
-# Microservice to index blockchain data off chain throught [js-uprtcl-server](https://github.com/uprtcl/js-uprtcl-server)
+# Uprtcl-Blockchain Watchman Microservice
+
+It intends to index data off chain throught [js-uprtcl-server](https://github.com/uprtcl/js-uprtcl-server)
 
 **Local Development**
 
-Microservice aimed at monitoring blockchain data changes to create indexing between the ETH network and the Uprctl main web service.
+To hack, test or try this microservice it is recommended to have a Web3 environment setup in your machine.
 
 - Create a `.env` file in the root folder with the content:
 
@@ -10,10 +12,11 @@ Microservice aimed at monitoring blockchain data changes to create indexing betw
 PROTOCOL=http
 PORT=3000
 HOST=localhost // Host to index the data (Web Service)
-ETH_HOST=http://localhost
-ETH_PORT=8545
-MAIN_EVENT=HeadUpdated
-CONTRACT_ADDRESS=0x0000001 // In this case it would be uprtcl contract address.
+IPFS_PROTOCOL=http
+IPFS_HOST=127.0.0.1
+IPFS_PORT=5002
+ETH_PROVIDER=http://192.168.1.19:8545
+TARGET_EVENT=HeadUpdated
 WEB_SERVER=http://localhost:3100/uprtcl/1
 MNEMONIC= the mnemonic provided with the wallet
 
