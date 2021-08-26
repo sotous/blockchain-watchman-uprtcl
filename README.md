@@ -6,6 +6,9 @@ It intends to index data off chain throught [js-uprtcl-server](https://github.co
 
 To hack, test or try this microservice it is recommended to have a Web3 environment setup in your machine, which means to have the following services available and ready:
 
+> Quick Start Option
+> [See here to quick start](#https://github.com/sotous/js-uprtcl-dev/edit/eth-refactor/README.md)
+
 - [Web Server](https://github.com/sotous/js-uprtcl-server/tree/eth-refactor): Check it's README file, but you need to create an `.env` file and run dgraph with docker.
 
 - [IPFS](https://ipfs.io/) Service: Make sure you have a running daemon on your computer or assign an already deployed peer as environment variable to **Linked Thoughts** and **Watchman**
@@ -80,6 +83,3 @@ npm run dev
 ```
 
 Now open `localhost:8002` on your browser and you should see the application. Use Metamask as the login tool.
-
-> Quick Start Option
-> [See here to quick start](#https://github.com/sotous/js-uprtcl-dev/edit/eth-refactor/README.md)
