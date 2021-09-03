@@ -4,7 +4,7 @@
   "description": "Microservice to monitor ETH network updates and sync data with off chain DB for indexing.",
   "main": "index.js",
   "scripts": {
-    "dev": "tsc-watch --onSuccess \"node --inspect ./dist/server-debug.js\"",
+    "dev": "tsc-watch --onSuccess \"node --inspect=9228 ./dist/server-debug.js\"",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc"
   },
