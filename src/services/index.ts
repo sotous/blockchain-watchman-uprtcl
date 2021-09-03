@@ -61,7 +61,7 @@ export const getRoutes = async () => {
 
   // We provide the remote.
   const watchmanRepo = new WatchmanRepository(httpRemote);
-  const watchmanService = new WatchmanService(ipfs, watchmanRepo);
+  const watchmanService = new WatchmanService(entityResolver, watchmanRepo);
 
   const contract = ethEveesConnection.uprtclRoot.contractInstance;
 
