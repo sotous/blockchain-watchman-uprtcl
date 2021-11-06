@@ -143,28 +143,19 @@ export class WatchmanService {
     );
     latest.sort((a, b) => (a.perspectiveId > b.perspectiveId ? 1 : -1));
 
-    // Detect added perspectives.
-    if (previousChanges.length !== latest.length) {
+    if (latest.length > previousChanges.length) {
+      // Detect added perspectives.
       added = latest.filter(this.updatesComparer(previousChanges));
+    } else if (latest.length < previousChanges.length) {
+      // Detect removed perspectives.
+      removed = previousChanges.filter(this.updatesComparer(latest));
     }
-
-    // Detect removed perspectives.
-    const indexRemoved = latest.reduce((elementsRemoved, persp) => {
-      persp.indexData?.linkChanges?.children?.removed.map((el) =>
-        elementsRemoved.push(el)
-      );
-      return elementsRemoved;
-    }, [] as string[]);
-
-    removed = latest.filter(
-      (persp) => indexRemoved.indexOf(persp.perspectiveId) > -1
-    );
 
     // Gets modifications to persistent information.
     previousChanges.map((previous) => {
       latest.map((current) => {
         if (previous.perspectiveId === current.perspectiveId) {
-          const isAdelete = indexRemoved.indexOf(current.perspectiveId) > -1;
+          const isAdelete = removed.includes(previous);
           const canUpdate =
             previous.details.canUpdate !== current.details.canUpdate
               ? current.details.canUpdate
@@ -178,8 +169,8 @@ export class WatchmanService {
               ? current.details.guardianId
               : undefined;
           const linkChanges =
-            previous.indexData?.linkChanges !== current.indexData?.linkChanges
-              ? current.indexData?.linkChanges
+            previous.indexData?.links !== current.indexData?.links
+              ? current.indexData?.links
               : undefined;
           const text =
             previous.indexData?.text !== previous.indexData?.text
