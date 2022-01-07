@@ -13,7 +13,7 @@ export class WatchmanRepository {
       await this.entityRemote.updateSu(mutation);
       console.log('[Blockchain Microservice] - Content successfully mirrored.');
     } catch (err) {
-      throw new Error(err);
+      throw new Error(err as any);
     }
   }
 }
